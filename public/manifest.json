@@ -7,8 +7,24 @@
     "default_popup": "index.html",
     "default_icon": "icon.png"
   },
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "identity",
+    "https://www.googleapis.com/"
+  ],
   "background": {
     "service_worker": "background.js"
+  },
+  "oauth2": {
+    "client_id": "831163705988-4eik1o9t684rmef97tm90m26unlp0s66.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/gmail.readonly"
+    ]
+  },
+  "content_security_policy": {
+    "script-src": "'self'",
+    "object-src": "'self'"
   }
 }

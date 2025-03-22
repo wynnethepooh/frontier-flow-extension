@@ -1,8 +1,8 @@
 import {useEffect, useState} from 'react'
 import './App.css'
+import GmailSearch from './gmail/gmail-search';
 
 function App() {
-  const [count, setCount] = useState(0)
 
   const [isOnFrontierSite, setIsOnFrontierSite] = useState(false);
 
@@ -23,9 +23,11 @@ function App() {
 
   return (
     <div>
-      <h1>Frontier Flow</h1>
-      <p>Count: {count}</p>
-      <button disabled={!isOnFrontierSite} onClick={() => setCount(count + 1)}>Increase</button>
+      <h1 className="header">Frontier Flow</h1>
+      <GmailSearch />
+      {isOnFrontierSite &&
+          <button>{'Breeze through check in'}</button>
+      }
     </div>
   )
 }
