@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Frontier Flow",
+  "version": "1.0",
+  "description": "Streamlines flows when booking and checking in for Frontier flights",
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": "icon.png"
+  },
+  "permissions": ["storage", "activeTab", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
