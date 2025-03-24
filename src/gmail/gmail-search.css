@@ -1,5 +1,6 @@
 .header {
-  margin-bottom: 7px;
+  margin-bottom: 10px;
+  font-weight: bold;
 }
 
 .logo-button {
@@ -18,22 +19,6 @@
 .frontier-button-container {
   display: flex;
   flex-direction: column;
-}
-
-.frontier-button {
-  background-color: #006747;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  margin-bottom: 5px;
-  font-size: 12px;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: background-color 0.3s;
-}
-
-.frontier-button:hover {
-  background-color: #00593b;
 }
 
 .loader {

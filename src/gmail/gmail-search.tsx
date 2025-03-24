@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import googleLogo from '../assets/google.png';
 import './gmail-search.css';
+import {Flight} from "./types.ts";
+import FlightInfo from "./flight-info.tsx";
 
 const GmailSearch: React.FC = () => {
-  const [confirmationNumbers, setConfirmationNumbers] = useState(new Set<string>());
+  const [confirmationDetails, setConfirmationDetails] = useState(new Map<string, Flight | null>());
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,10 +68,9 @@ const GmailSearch: React.FC = () => {
             })
           );
           console.log(emailDetails);
-          const confirmationNumbers = extractConfirmationNumbers(emailDetails);
-          setConfirmationNumbers(new Set(confirmationNumbers));
+          extractConfirmationDetails(emailDetails);
         } else {
-          setConfirmationNumbers(new Set());
+          setConfirmationDetails(new Map());
         }
       } else {
         setError('Failed to fetch emails');
@@ -122,24 +123,67 @@ const GmailSearch: React.FC = () => {
     return bodyText;
   }
 
-  const extractConfirmationNumbers = (emails: any[]) => {
-    return emails
+  const extractConfirmationDetails = (emails: any[]) => {
+    const newConfirmationDetails = new Map();
+    emails
       .map((email) => {
         const parser = new DOMParser();
         const doc = parser.parseFromString(email.text, "text/html");
 
-        const match = doc.body?.textContent?.match(/confirmation code:\s*([A-Za-z0-9]{6})/i);
-        return match ? match[1] : null; // Return the first matched confirmation number
+        const match = doc.body?.textContent?.match(/confirmation code is:\s*([A-Za-z0-9]{6})/i);
+        const confirmationCode = match ? match[1] : null;
+
+        if (!confirmationCode) return null; // Skip if no confirmation code is found
+
+        const flightInfo = extractFlightInfo(doc, confirmationCode);
+
+        newConfirmationDetails.set(confirmationCode, flightInfo);
       })
-      .filter((match) => match !== null);
+      .filter((item) => item !== null); // Remove null values
+
+    setConfirmationDetails(newConfirmationDetails);
   };
+
+  const extractFlightInfo = (doc: Document, confirmationCode: string): Flight | null => {
+    const linkElement = Array.from(doc.querySelectorAll("a"))
+      .find((a) => a.textContent?.trim() === confirmationCode);
+
+    console.log(linkElement);
+    const confirmationLink = linkElement ? linkElement.getAttribute("href") : null;
+
+    const flightHeader = Array.from(doc.querySelectorAll("h2"))
+        .find(h2 => h2.textContent?.toLowerCase().includes("departing flight"));
+
+    console.log(flightHeader);
+    if (!flightHeader) return null; // If not found, skip
+
+    const routeElement = flightHeader.closest("table")?.nextElementSibling?.querySelector("p");
+    const route = routeElement ? routeElement.textContent?.trim() : null;
+
+    const dateElement = routeElement?.nextElementSibling;
+    const departureInfo = dateElement ? dateElement.textContent?.trim() : null;
+    console.log(departureInfo);
+    const parts = departureInfo?.split('|');
+    let depart, arrive;
+    if (parts) {
+      depart = parts[0]?.trim();
+      arrive = parts[1]?.trim();
+    }
+
+    return {
+      link: confirmationLink,
+      route,
+      depart,
+      arrive,
+    };
+  }
 
   const handleSignOut = () => {
     chrome.identity.getAuthToken({ interactive: false }, (token) => {
       // @ts-expect-error token is already a string
       chrome.identity.removeCachedAuthToken({ token: token }, () => {
         setAuthToken(null);
-        setConfirmationNumbers(new Set());
+        setConfirmationDetails(new Map());
         setError(null);
       });
     });
@@ -152,9 +196,11 @@ const GmailSearch: React.FC = () => {
           <div className="loader" />
         ) : (
           <div className="frontier-button-container">
-            {[...confirmationNumbers].map((confirmationNumber, index) => (
-              <button key={index} className="frontier-button">{confirmationNumber}</button>
-            ))}
+            {[...confirmationDetails].map(([code, flightInfo]) => {
+              return (
+                <FlightInfo code={code} flight={flightInfo} />
+              );
+            })}
           </div>
         )
       }
